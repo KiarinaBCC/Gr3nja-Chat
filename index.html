@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta name="google-site-verification" content="CJiicNCGiTJzpbrxZayKAP7j4w8jSGbrlQt8gbvxPYI" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrenjaP2Pchat</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.15/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #1a1a1a !important;
+      color: #82af3c !important;
+    }
+    nav {
+      background-color: #1a1a1a;
+      padding: 0.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #e0e0e0;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    nav a:hover {
+      color: #ffd43b;
+    }
+    .message-animation {
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .typing-indicator {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    .connection-status {
+      animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #222 0%, #2a2a2a 100%) !important;
+    }
+    .glass-effect {
+      backdrop-filter: blur(10px);
+      background: rgba(34, 34, 34, 0.7);
+      border: 1px solid rgba(130, 175, 60, 0.2);
+    }
+    /* タイトルやボタンの色統一 */
+    .main-title,
+    .section-title,
+    .gradient-bg,
+    .text-title,
+    .text-green-500,
+    .text-blue-500,
+    .text-indigo-500,
+    .text-red-500,
+    .text-yellow-800,
+    .text-green-800,
+    .text-red-800 {
+      color: #82af3c !important;
+      background: none !important;
+      background-clip: unset !important;
+      -webkit-background-clip: unset !important;
+      text-shadow: 0 0 8px #82af3c44;
+    }
+    .bg-blue-500,
+    .bg-green-500,
+    .bg-indigo-500,
+    .bg-yellow-100,
+    .bg-green-100,
+    .bg-red-100,
+    .bg-gray-50,
+    .bg-white,
+    .bg-gray-100,
+    .bg-gray-200 {
+      background: #222 !important;
+      color: #82af3c !important;
+    }
+    .hover\:bg-blue-600:hover,
+    .hover\:bg-green-600:hover,
+    .hover\:bg-indigo-600:hover {
+      background: #2a2a2a !important;
+      color: #82af3c !important;
+    }
+    .border-gray-300,
+    .border-dashed {
+      border-color: #82af3c !important;
+    }
+    .shadow-xl,
+    .shadow-lg,
+    .shadow-md {
+      box-shadow: 0 2px 16px #82af3c22 !important;
+    }
+    input,
+    textarea {
+      background: #1a1a1a !important;
+      color: #82af3c !important;
+      border-color: #82af3c !important;
+    }
+    input:focus,
+    textarea:focus {
+      outline: 2px solid #82af3c !important;
+      box-shadow: 0 0 0 2px #82af3c55 !important;
+    }
+    button,
+    .btn,
+    .bg-blue-500,
+    .bg-green-500,
+    .bg-indigo-500 {
+      background: #222 !important;
+      color: #82af3c !important;
+      border: 1px solid #82af3c !important;
+      transition: background 0.2s, color 0.2s;
+    }
+    button:hover,
+    .btn:hover,
+    .hover\:bg-blue-600:hover,
+    .hover\:bg-green-600:hover,
+    .hover\:bg-indigo-600:hover {
+      background: #2a2a2a !important;
+      color: #82af3c !important;
+    }
+    /* スクロールバーもダークに */
+    ::-webkit-scrollbar {
+      width: 8px;
+      background: #222;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #82af3c55;
+      border-radius: 4px;
+    }
+    /* 角丸を無効化 */
+    .rounded-lg,
+    .rounded-l-lg,
+    .rounded-r-lg,
+    .rounded,
+    .rounded-md,
+    .rounded-xl,
+    .rounded-2xl,
+    .rounded-3xl,
+    .rounded-full,
+    .rounded-sm {
+      border-radius: 0 !important;
+    }
+    /* 通知のz-indexをnavより上に */
+    .notification-fixed {
+      z-index: 200 !important;
+    }
+    /* エラーや警告も緑色で統一 */
+    .bg-red-100,
+    .bg-yellow-100,
+    .text-red-800,
+    .text-yellow-800,
+    .bg-red-500,
+    .bg-yellow-500 {
+      background: #222 !important;
+      color: #82af3c !important;
+    }
+    .border-red-500,
+    .border-yellow-500 {
+      border-color: #82af3c !important;
+    }
+    /* メッセージ囲み用 */
+    .message-bubble {
+      border: 1px solid #82af3c;
+      background: #222;
+      color: #82af3c;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      max-width: 90%;
+      word-break: break-word;
+    }
+    .message-local {
+      text-align: right;
+    }
+    .message-remote {
+      text-align: left;
+    }
+    .message-system {
+      text-align: center;
+      color: #82af3c !important;
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav>
+    <ul>
+      <li><a href="#home">Home</a></li>
+      <li><a href="#download">Download</a></li>
+      <li><a href="#docs">Documentation</a></li>
+      <li><a href="#community">Community</a></li>
+      <li><a href="#news">News</a></li>
+      <li><a href="#support">Support</a></li>
+    </ul>
+  </nav>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    function App() {
+      const [peerId, setPeerId] = useState('');
+      const [remotePeerId, setRemotePeerId] = useState('');
+      const [message, setMessage] = useState('');
+      const [messages, setMessages] = useState([]);
+      const [connectionStatus, setConnectionStatus] = useState('未接続');
+      const [isTyping, setIsTyping] = useState(false);
+      const [notification, setNotification] = useState('');
+      const [userName, setUserName] = useState('');
+      const [remoteName, setRemoteName] = useState('');
+      const [isNameSet, setIsNameSet] = useState(false);
+
+      const peerInstance = useRef(null);
+      const connRef = useRef(null);
+      const cryptoKey = useRef(null);
+      const messagesEndRef = useRef(null);
+      const typingTimeoutRef = useRef(null);
+
+      // 通知表示
+      const showNotification = (msg) => {
+        setNotification(msg);
+        setTimeout(() => setNotification(''), 3000);
+      };
+
+      // 暗号化キーの生成
+      const generateKey = async () => {
+        try {
+          return await window.crypto.subtle.generateKey(
+            {
+              name: 'AES-GCM',
+              length: 256,
+            },
+            true,
+            ['encrypt', 'decrypt']
+          );
+        } catch (e) {
+          showNotification('暗号化キーの生成に失敗しました');
+          return null;
+        }
+      };
+
+      // ArrayBufferをBase64に変換
+      const arrayBufferToBase64 = (buffer) => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+      };
+
+      // Base64をArrayBufferに変換
+      const base64ToArrayBuffer = (base64) => {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+      };
+
+      // メッセージの暗号化
+      const encryptMessage = async (text) => {
+        if (!cryptoKey.current) {
+          showNotification('暗号化キーが設定されていません');
+          return null;
+        }
+        const encoder = new TextEncoder();
+        const data = encoder.encode(text);
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encrypted = await window.crypto.subtle.encrypt(
+          {
+            name: 'AES-GCM',
+            iv: iv,
+          },
+          cryptoKey.current,
+          data
+        );
+        return { 
+          iv: arrayBufferToBase64(iv), 
+          encrypted: arrayBufferToBase64(encrypted) 
+        };
+      };
+
+      // メッセージの復号化
+      const decryptMessage = async ({ iv, encrypted }) => {
+        try {
+          const decrypted = await window.crypto.subtle.decrypt(
+            {
+              name: 'AES-GCM',
+              iv: base64ToArrayBuffer(iv),
+            },
+            cryptoKey.current,
+            base64ToArrayBuffer(encrypted)
+          );
+          const decoder = new TextDecoder();
+          return decoder.decode(decrypted);
+        } catch (e) {
+          return '復号化エラー';
+        }
+      };
+
+      // キーを ArrayBuffer に変換して送信
+      const exportKey = async (key) => {
+        const exported = await window.crypto.subtle.exportKey('raw', key);
+        return arrayBufferToBase64(exported);
+      };
+
+      // タイムスタンプのフォーマット
+      const formatTimestamp = () => {
+        return new Date().toLocaleString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      };
+
+      // タイピングインジケーター
+      const handleTyping = () => {
+        if (connRef.current) {
+          connRef.current.send({ type: 'typing', user: userName });
+          
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+          
+          typingTimeoutRef.current = setTimeout(() => {
+            if (connRef.current) {
+              connRef.current.send({ type: 'stop-typing' });
+            }
+          }, 2000);
+        }
+      };
+
+      // データ受信処理
+      const handleData = async (data) => {
+        if (data.type === 'key') {
+          try {
+            cryptoKey.current = await window.crypto.subtle.importKey(
+              'raw',
+              base64ToArrayBuffer(data.key),
+              { name: 'AES-GCM' },
+              false,
+              ['encrypt', 'decrypt']
+            );
+            setMessages(prev => [...prev, { sender: 'system', text: '暗号化キーを受信しました', timestamp: formatTimestamp() }]);
+          } catch (e) {
+            showNotification('暗号化キーのインポートに失敗しました');
+          }
+        } else if (data.type === 'message') {
+          const decryptedText = await decryptMessage(data);
+          setMessages(prev => [...prev, { sender: 'remote', text: decryptedText, timestamp: formatTimestamp() }]);
+          showNotification('新しいメッセージが届きました');
+        } else if (data.type === 'typing') {
+          setRemoteName(data.user || '相手');
+          setIsTyping(true);
+        } else if (data.type === 'stop-typing') {
+          setIsTyping(false);
+        } else if (data.type === 'user-info') {
+          setRemoteName(data.name);
+        }
+      };
+
+      // メッセージ更新時に最下部にスクロール
+      useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages]);
+
+      useEffect(() => {
+        const peer = new Peer({
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+            ]
+          }
+        });
+        peerInstance.current = peer;
+
+        peer.on('open', async (id) => {
+          setPeerId(id);
+          setConnectionStatus('Peer ID 生成済み');
+          cryptoKey.current = await generateKey();
+        });
+
+        peer.on('connection', (conn) => {
+          connRef.current = conn;
+          setConnectionStatus('接続済み');
+          showNotification('新しい接続が確立されました');
+          
+          conn.on('data', handleData);
+          
+          conn.on('close', () => {
+            setConnectionStatus('切断されました');
+            setMessages(prev => [...prev, { sender: 'system', text: '接続が切断されました', timestamp: formatTimestamp() }]);
+            connRef.current = null;
+            showNotification('接続が切断されました');
+          });
+        });
+
+        peer.on('error', (err) => {
+          setMessages(prev => [...prev, { sender: 'system', text: `エラー: ${err.message}`, timestamp: formatTimestamp() }]);
+          setConnectionStatus(`エラー: ${err.type}`);
+          showNotification(`エラー: ${err.message}`);
+        });
+
+        return () => peer.destroy();
+      }, []);
+
+      const connectToPeer = async () => {
+        if (!remotePeerId) {
+          showNotification('Peer IDを入力してください');
+          return;
+        }
+        setConnectionStatus('接続中...');
+        const conn = peerInstance.current.connect(remotePeerId);
+        connRef.current = conn;
+        
+        conn.on('open', async () => {
+          setConnectionStatus('接続済み');
+          const keyData = await exportKey(cryptoKey.current);
+          conn.send({ type: 'key', key: keyData });
+          
+          if (userName) {
+            conn.send({ type: 'user-info', name: userName });
+          }
+          
+          setMessages(prev => [...prev, { sender: 'system', text: '暗号化キーを送信しました', timestamp: formatTimestamp() }]);
+          showNotification('接続が確立されました');
+          
+          conn.on('data', handleData);
+          
+          conn.on('close', () => {
+            setConnectionStatus('切断されました');
+            setMessages(prev => [...prev, { sender: 'system', text: '接続が切断されました', timestamp: formatTimestamp() }]);
+            connRef.current = null;
+            showNotification('接続が切断されました');
+          });
+        });
+        
+        conn.on('error', (err) => {
+          setMessages(prev => [...prev, { sender: 'system', text: `接続エラー: ${err.message}`, timestamp: formatTimestamp() }]);
+          setConnectionStatus(`エラー: ${err.type}`);
+          showNotification(`接続エラー: ${err.message}`);
+        });
+      };
+
+      const sendMessage = async () => {
+        if (message && connRef.current && cryptoKey.current) {
+          const encryptedMessage = await encryptMessage(message);
+          if (!encryptedMessage) {
+            return;
+          }
+          connRef.current.send({ type: 'message', ...encryptedMessage });
+          setMessages(prev => [...prev, { sender: 'local', text: message, timestamp: formatTimestamp() }]);
+          setMessage('');
+          
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            connRef.current.send({ type: 'stop-typing' });
+          }
+        } else {
+          showNotification('メッセージを送信するには接続と暗号化キーが必要です');
+        }
+      };
+
+      const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      };
+
+      const handleMessageChange = (e) => {
+        setMessage(e.target.value);
+        handleTyping();
+      };
+
+      const copyPeerId = () => {
+        navigator.clipboard.writeText(peerId);
+        showNotification('Peer IDをクリップボードにコピーしました');
+      };
+
+      const disconnect = () => {
+        if (connRef.current) {
+          connRef.current.close();
+          connRef.current = null;
+          setConnectionStatus('切断されました');
+          showNotification('接続を切断しました');
+        }
+      };
+
+      const handleNameSubmit = () => {
+        if (userName.trim()) {
+          setIsNameSet(true);
+        } else {
+          showNotification('名前を入力してください');
+        }
+      };
+
+      // 名前入力画面
+      if (!isNameSet) {
+        return (
+          <div className="min-h-screen gradient-bg flex items-center justify-center">
+            <div className="bg-white p-6 max-w-md w-full shadow-xl">
+              <h1 className="text-2xl font-bold mb-4 text-center gradient-bg bg-clip-text text-transparent">
+                名前を入力してください
+              </h1>
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="あなたの名前"
+                className="w-full p-3 border border-gray-300 mb-4"
+                onKeyPress={(e) => e.key === 'Enter' && handleNameSubmit()}
+              />
+              <button
+                onClick={handleNameSubmit}
+                className="w-full bg-blue-500 text-white px-6 py-3 hover:bg-blue-600 transition-colors"
+              >
+                開始
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen gradient-bg">
+          {/* 通知（ヘッダーより上に表示） */}
+          {notification && (
+            <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 shadow-lg animate-pulse notification-fixed">
+              {notification}
+            </div>
+          )}
+          <div className="max-w-4xl mx-auto p-4 sm:p-6">
+            {/* ヘッダー（接続前） */}
+            {connectionStatus !== '接続済み' && (
+              <div className="bg-white shadow-xl p-6 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h1 className="text-3xl font-bold gradient-bg bg-clip-text text-transparent">
+                    P2P暗号化チャット
+                  </h1>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">あなたのPeer ID</label>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        value={peerId}
+                        readOnly
+                        className="flex-1 p-2 border border-gray-300 font-mono text-sm"
+                      />
+                      <button
+                        onClick={copyPeerId}
+                        disabled={!peerId}
+                        className="bg-indigo-500 text-white px-4 py-2 hover:bg-indigo-600 disabled:opacity-50 transition-colors"
+                      >
+                        コピー
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-green-100 text-green-800 connection-status">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full mr-2 bg-green-500"></div>
+                    接続状態: {connectionStatus}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 接続セクション（接続前） */}
+            {connectionStatus !== '接続済み' && (
+              <div className="bg-white shadow-xl p-6 mb-6">
+                <h2 className="text-xl font-semibold mb-4">接続</h2>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <input
+                    type="text"
+                    value={remotePeerId}
+                    onChange={(e) => setRemotePeerId(e.target.value)}
+                    placeholder="接続するPeer IDを入力"
+                    className="flex-1 p-3 border border-gray-300"
+                  />
+                  <button
+                    onClick={connectToPeer}
+                    disabled={!remotePeerId || connectionStatus === '接続中...'}
+                    className="bg-blue-500 text-white px-6 py-3 hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                  >
+                    {connectionStatus === '接続中...' ? '接続中...' : '接続'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* チャットセクション（接続後） */}
+            {connectionStatus === '接続済み' && (
+              <div className="bg-white shadow-xl p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">
+                    チャット {remoteName && `with ${remoteName}`}
+                  </h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={disconnect}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      切断
+                    </button>
+                  </div>
+                </div>
+                
+                {/* メッセージエリア */}
+                <div className="h-[60vh] overflow-y-auto border-2 border-dashed p-4 mb-4 bg-gray-50">
+                  {messages.map((msg, index) => (
+                    <div
+                      key={index}
+                      className={
+                        msg.sender === 'local'
+                          ? 'message-local'
+                          : msg.sender === 'remote'
+                          ? 'message-remote'
+                          : 'message-system'
+                      }
+                    >
+                      <div
+                        className={
+                          msg.sender === 'system'
+                            ? ''
+                            : 'message-bubble'
+                        }
+                      >
+                        <div className="text-xs opacity-70 mb-1">{msg.timestamp}</div>
+                        <div className="break-words">{msg.text}</div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {isTyping && (
+                    <div className="message-remote mb-3">
+                      <div className="message-bubble typing-indicator">
+                        <div className="text-xs text-gray-500 mb-1">{remoteName}</div>
+                        <div className="text-gray-600">入力しています...</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* 入力エリア */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={handleMessageChange}
+                    onKeyPress={handleKeyPress}
+                    placeholder="メッセージを入力..."
+                    className="flex-1 p-3 border border-gray-300"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={!message.trim()}
+                    className="bg-green-500 text-white px-6 py-3 hover:bg-green-600 disabled:opacity-50 transition-colors"
+                  >
+                    送信
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
